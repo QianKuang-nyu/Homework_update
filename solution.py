@@ -1,35 +1,65 @@
+#import socket module
+from socket import *
+import sys # In order to terminate the program
 
-### welcome_assignment_answers
-### Input - All eight questions given in the assignment.
-### Output - The right answer for the specific question.
+def webServer(port=13331):
+    serverSocket = socket(AF_INET, SOCK_STREAM)
 
-def welcome_assignment_answers(question):
-    #The student doesn't have to follow the skeleton for this assignment.
-    #Another way to implement is using a "case" statements similar to C.
-    answer = ""
-    if question == "Are encoding and encryption the same? - Yes/No":
-        answer = "No"
-    elif question == "Is it possible to decrypt a message without a key? - Yes/No":
-        answer = "No"
-    elif question == "Is it possible to decode a message without a key? - Yes/No":
-        answer = "Yes"
-    elif question == "Is a hashed message supposed to be un-hashed? - Yes/No":
-        answer = "No"
-    elif question == "What is the MD5 hashing value to the following message: 'NYU Computer Networking' - Use MD5 hash generator and use the answer in your code":
-        answer = "42b76fe51778764973077a5a94056724"
-    elif question == "Is MD5 a secured hashing algorithm? - Yes/No":
-        answer = "No"
-    elif question == "What layer from the TCP/IP model the protocol DHCP belongs to? - The answer should be a numeric number":
-        answer = 5
-    elif question == "What layer of the TCP/IP model the protocol TCP belongs to? - The answer should be a numeric number":
-        answer = 4
-    return(answer)
-# Complete all the questions.
+    #Prepare a sever socket
+    #Fill in start
+    serverSocket.bind(('127.0.0.1',port))
+    serverSocket.listen(1)
+    #Fill in end
 
+    while True:
+        #Establish the connection
+        print('Ready to serve...')
+        connectionSocket, addr = serverSocket.accept()
+        try:
+        	# In python3
+        	# str->bytes: encode()
+        	# bytes->str: decode()
 
+        	# get info from client
+            message = connectionSocket.recv(1024).decode()
+            filename = message.split()[1]
+            
+            # file I/O
+            f = open(filename[1:])
+            outputdata = f.read()
+
+            #Send one HTTP header line into socket
+            #Fill in start
+            connectionSocket.send('HTTP/1.1 200 OK\r\n'.encode())
+            # A blank line is needed, otherwise not work
+            connectionSocket.send('\r\n'.encode())
+            #Fill in end
+
+            #Send the content of the requested file to the client
+            for i in range(0, len(outputdata)):
+                connectionSocket.send(outputdata[i].encode())
+
+            connectionSocket.send("\r\n".encode())
+            connectionSocket.close()
+        except IOError:
+            #Send response message for file not found (404)
+            #Fill in start
+            connectionSocket.send('HTTP/1.1 404 NOT FOUND\r\n'.encode())
+            # # A blank line is needed, otherwise not work
+            connectionSocket.send('\r\n'.encode())
+            # To output something
+            connectionSocket.send('<html><body> \
+            	Undefined Page</body></html>\r\n'.encode())
+
+            #Fill in end
+
+            #Close client socket
+            #Fill in start
+            connectionSocket.close()
+            #Fill in end
+
+    serverSocket.close()
+    sys.exit()  # Terminate the program after sending the corresponding data
 
 if __name__ == "__main__":
-    #use this space to debug and verify that the program works
-    debug_question = "Are encoding and encryption the same? - Yes/No"
-    # debug_question = ""
-    print(welcome_assignment_answers(debug_question))
+    webServer(13331)
